@@ -1,0 +1,13 @@
+# Core data and plotting
+numpy
+pandas
+matplotlib
+seaborn
+
+# Machine learning
+scikit-learn
+joblib
+
+# Notebook support
+jupyterlab
+ipykernel

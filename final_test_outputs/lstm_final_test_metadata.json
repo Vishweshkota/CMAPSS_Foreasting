@@ -1,0 +1,38 @@
+{
+  "model_name": "Optimized LSTM",
+  "evaluation": "Official Test",
+  "window_size": 30,
+  "feature_count": 22,
+  "feature_cols": [
+    "sensor_2",
+    "sensor_3",
+    "sensor_4",
+    "sensor_6",
+    "sensor_7",
+    "sensor_8",
+    "sensor_9",
+    "sensor_11",
+    "sensor_12",
+    "sensor_13",
+    "sensor_14",
+    "sensor_15",
+    "sensor_17",
+    "sensor_20",
+    "sensor_21",
+    "setting_1",
+    "setting_2",
+    "setting_3",
+    "sensor_16",
+    "sensor_10",
+    "time_cycles",
+    "op_condition"
+  ],
+  "epochs": 6,
+  "batch_size": 64,
+  "x_test_shape": [
+    707,
+    30,
+    22
+  ],
+  "n_test_engines": 707
+}
