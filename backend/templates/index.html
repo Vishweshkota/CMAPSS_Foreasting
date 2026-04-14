@@ -5,37 +5,88 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CMAPSS RUL Predictor</title>
     <style>
+        :root {
+            --bg: #f4f7fb;
+            --card: #ffffff;
+            --border: #d9e2ec;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --primary: #1363df;
+            --primary-dark: #0b4fb3;
+            --success-bg: #dff6e5;
+            --success-text: #17663a;
+            --warn-bg: #fff4d6;
+            --warn-text: #8a6116;
+            --error-bg: #fde2e2;
+            --error-text: #9b1c1c;
+            --shadow: 0 8px 20px rgba(17, 24, 39, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
+            margin: 0;
             font-family: Arial, sans-serif;
-            max-width: 1100px;
-            margin: 30px auto;
-            padding: 20px;
-            background: #f7f9fc;
-            color: #222;
+            background: linear-gradient(180deg, #eef4ff 0%, var(--bg) 100%);
+            color: var(--text);
         }
 
-        h1 {
+        .page {
+            max-width: 1320px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .hero {
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 22px;
         }
 
-        p {
-            text-align: center;
-            color: #555;
+        .hero h1 {
+            margin: 0 0 8px;
+            font-size: 34px;
         }
 
-        form, .panel {
-            background: white;
+        .hero p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 15px;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1.35fr 0.95fr;
+            gap: 22px;
+            align-items: start;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-            margin-top: 20px;
+        }
+
+        .card h2 {
+            margin: 0 0 14px;
+            font-size: 20px;
+        }
+
+        .section-title {
+            margin: 18px 0 10px;
+            font-size: 15px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
 
         .grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
+            gap: 14px;
         }
 
         .field {
@@ -45,297 +96,942 @@
 
         label {
             font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        input, select, button {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
+            margin-bottom: 6px;
             font-size: 14px;
         }
 
-        .button-row {
+        input, select, button {
+            font-size: 14px;
+            border-radius: 10px;
+        }
+
+        input, select {
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            background: #fff;
+        }
+
+        input:focus, select:focus {
+            outline: 2px solid #bfdbfe;
+            border-color: var(--primary);
+        }
+
+        .actions {
             display: flex;
             gap: 10px;
-            margin-top: 20px;
+            flex-wrap: wrap;
+            margin-top: 18px;
         }
 
         button {
-            background: #1f6feb;
-            color: white;
             border: none;
+            padding: 11px 16px;
             cursor: pointer;
-        }
-
-        button:hover {
-            background: #1557b0;
-        }
-
-        .secondary-btn {
-            background: #6c757d;
-        }
-
-        .secondary-btn:hover {
-            background: #545b62;
-        }
-
-        .result-box {
-            margin-top: 15px;
-            background: #f3f6fb;
-            padding: 15px;
-            border-radius: 8px;
-            white-space: pre-wrap;
-            font-family: Consolas, monospace;
-        }
-
-        .status {
-            margin-top: 15px;
-            padding: 12px;
-            border-radius: 8px;
             font-weight: 600;
         }
 
-        .status.waiting {
-            background: #fff3cd;
-            color: #856404;
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
         }
 
-        .status.ready {
-            background: #d4edda;
-            color: #155724;
+        .btn-primary:hover {
+            background: var(--primary-dark);
         }
 
-        .status.error {
-            background: #f8d7da;
-            color: #721c24;
+        .btn-secondary {
+            background: #64748b;
+            color: #fff;
         }
 
-        .prediction {
-            font-size: 22px;
-            font-weight: bold;
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
+        .status-box {
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-weight: 600;
+            margin-bottom: 14px;
+        }
+
+        .status-waiting {
+            background: var(--warn-bg);
+            color: var(--warn-text);
+        }
+
+        .status-ready {
+            background: var(--success-bg);
+            color: var(--success-text);
+        }
+
+        .status-error {
+            background: var(--error-bg);
+            color: var(--error-text);
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px;
+            background: #fbfdff;
+            margin-bottom: 16px;
+        }
+
+        .prediction-label {
+            color: var(--muted);
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .prediction-value {
+            font-size: 38px;
+            font-weight: 700;
+            line-height: 1.1;
+            color: #0f5132;
+        }
+
+        .prediction-meta {
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .progress-wrap {
+            margin-bottom: 18px;
+        }
+
+        .progress-top {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 14px;
+            background: #e5e7eb;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #1363df, #38bdf8);
+            transition: width 0.25s ease;
+        }
+
+        .mini-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .mini-stat {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            background: #fafcff;
+        }
+
+        .mini-stat .label {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        .mini-stat .value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .compare-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .compare-card {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            background: #f8fbff;
+        }
+
+        .compare-card h3 {
+            margin: 0 0 8px;
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .compare-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0f5132;
+        }
+
+        .chart-card {
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px;
+            background: #fbfdff;
+            margin-bottom: 16px;
+        }
+
+        #predictionChart {
+            width: 100%;
+            max-width: 100%;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
             margin-top: 10px;
-            color: #155724;
+            display: block;
+        }
+
+        .chart-legend {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .chart-legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .chart-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+            background: #f8fafc;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        details {
+            margin-top: 16px;
+        }
+
+        details summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .json-box {
+            margin-top: 10px;
+            background: #f8fbff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            white-space: pre-wrap;
+            font-family: Consolas, monospace;
+            font-size: 13px;
+            overflow-x: auto;
+        }
+
+        .helper {
+            margin-top: 12px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        @media (max-width: 1024px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .grid,
+            .mini-grid,
+            .compare-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .prediction-value {
+                font-size: 30px;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>CMAPSS Turbofan RUL Predictor</h1>
-    <p>Send one raw sensor row at a time and receive a Remaining Useful Life prediction once 30 cycles are available.</p>
-
-    <form id="predictForm">
-        <div class="grid">
-            <div class="field">
-                <label for="model">Model</label>
-                <select id="model">
-                    <option value="lr">Linear Regression</option>
-                    <option value="rf">Random Forest</option>
-                    <option value="lstm">LSTM</option>
-                </select>
-            </div>
-
-            <div class="field">
-                <label for="tag">Dataset Tag</label>
-                <select id="tag">
-                    <option value="FD001">FD001</option>
-                    <option value="FD002">FD002</option>
-                    <option value="FD003">FD003</option>
-                    <option value="FD004">FD004</option>
-                </select>
-            </div>
-
-            <div class="field">
-                <label for="engine_id">Engine ID</label>
-                <input type="number" id="engine_id" value="1" required>
-            </div>
-
-            <div class="field">
-                <label for="time_cycles">Time Cycles</label>
-                <input type="number" id="time_cycles" value="1" required>
-            </div>
-
-            <div class="field">
-                <label for="setting_1">Setting 1</label>
-                <input type="number" step="any" id="setting_1" value="0.0" required>
-            </div>
-
-            <div class="field">
-                <label for="setting_2">Setting 2</label>
-                <input type="number" step="any" id="setting_2" value="0.0" required>
-            </div>
-
-            <div class="field">
-                <label for="setting_3">Setting 3</label>
-                <input type="number" step="any" id="setting_3" value="100.0" required>
-            </div>
-
-            <div class="field"><label for="sensor_1">Sensor 1</label><input type="number" step="any" id="sensor_1" value="518.67" required></div>
-            <div class="field"><label for="sensor_2">Sensor 2</label><input type="number" step="any" id="sensor_2" value="641.82" required></div>
-            <div class="field"><label for="sensor_3">Sensor 3</label><input type="number" step="any" id="sensor_3" value="1589.70" required></div>
-            <div class="field"><label for="sensor_4">Sensor 4</label><input type="number" step="any" id="sensor_4" value="1400.60" required></div>
-            <div class="field"><label for="sensor_5">Sensor 5</label><input type="number" step="any" id="sensor_5" value="14.62" required></div>
-            <div class="field"><label for="sensor_6">Sensor 6</label><input type="number" step="any" id="sensor_6" value="21.61" required></div>
-            <div class="field"><label for="sensor_7">Sensor 7</label><input type="number" step="any" id="sensor_7" value="554.36" required></div>
-            <div class="field"><label for="sensor_8">Sensor 8</label><input type="number" step="any" id="sensor_8" value="2388.06" required></div>
-            <div class="field"><label for="sensor_9">Sensor 9</label><input type="number" step="any" id="sensor_9" value="9046.19" required></div>
-            <div class="field"><label for="sensor_10">Sensor 10</label><input type="number" step="any" id="sensor_10" value="1.30" required></div>
-            <div class="field"><label for="sensor_11">Sensor 11</label><input type="number" step="any" id="sensor_11" value="47.47" required></div>
-            <div class="field"><label for="sensor_12">Sensor 12</label><input type="number" step="any" id="sensor_12" value="521.66" required></div>
-            <div class="field"><label for="sensor_13">Sensor 13</label><input type="number" step="any" id="sensor_13" value="2388.02" required></div>
-            <div class="field"><label for="sensor_14">Sensor 14</label><input type="number" step="any" id="sensor_14" value="8138.62" required></div>
-            <div class="field"><label for="sensor_15">Sensor 15</label><input type="number" step="any" id="sensor_15" value="8.4195" required></div>
-            <div class="field"><label for="sensor_16">Sensor 16</label><input type="number" step="any" id="sensor_16" value="0.03" required></div>
-            <div class="field"><label for="sensor_17">Sensor 17</label><input type="number" step="any" id="sensor_17" value="392.0" required></div>
-            <div class="field"><label for="sensor_18">Sensor 18</label><input type="number" step="any" id="sensor_18" value="2388.0" required></div>
-            <div class="field"><label for="sensor_19">Sensor 19</label><input type="number" step="any" id="sensor_19" value="100.0" required></div>
-            <div class="field"><label for="sensor_20">Sensor 20</label><input type="number" step="any" id="sensor_20" value="39.06" required></div>
-            <div class="field"><label for="sensor_21">Sensor 21</label><input type="number" step="any" id="sensor_21" value="23.4190" required></div>
+    <div class="page">
+        <div class="hero">
+            <h1>CMAPSS Turbofan RUL Predictor</h1>
+            <p>Stream one raw sensor row at a time and receive a Remaining Useful Life prediction once the rolling 30-cycle window is ready.</p>
         </div>
 
-        <div class="button-row">
-            <button type="submit">Send Sensor Row</button>
-            <button type="button" class="secondary-btn" id="resetEngineBtn">Reset Engine</button>
-            <button type="button" class="secondary-btn" id="resetAllBtn">Reset All</button>
+        <div class="layout">
+            <div class="card">
+                <h2>Engine Input</h2>
+
+                <div class="section-title">Engine Context</div>
+                <div class="grid">
+                    <div class="field">
+                        <label for="model">Model</label>
+                        <select id="model">
+                            <option value="lr">Linear Regression</option>
+                            <option value="rf">Random Forest</option>
+                            <option value="lstm">LSTM</option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label for="tag">Dataset Tag</label>
+                        <select id="tag">
+                            <option value="FD001">FD001</option>
+                            <option value="FD002">FD002</option>
+                            <option value="FD003">FD003</option>
+                            <option value="FD004">FD004</option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label for="engine_id">Engine ID</label>
+                        <input type="number" id="engine_id" value="1" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="time_cycles">Time Cycles</label>
+                        <input type="number" id="time_cycles" value="1" required>
+                    </div>
+                </div>
+
+                <div class="section-title">Operating Settings</div>
+                <div class="grid">
+                    <div class="field">
+                        <label for="setting_1">Setting 1</label>
+                        <input type="number" step="any" id="setting_1" value="0.0" required>
+                    </div>
+                    <div class="field">
+                        <label for="setting_2">Setting 2</label>
+                        <input type="number" step="any" id="setting_2" value="0.0" required>
+                    </div>
+                    <div class="field">
+                        <label for="setting_3">Setting 3</label>
+                        <input type="number" step="any" id="setting_3" value="100.0" required>
+                    </div>
+                </div>
+
+                <div class="section-title">Sensor Values</div>
+                <div class="grid">
+                    <div class="field"><label for="sensor_1">Sensor 1</label><input type="number" step="any" id="sensor_1" value="518.67" required></div>
+                    <div class="field"><label for="sensor_2">Sensor 2</label><input type="number" step="any" id="sensor_2" value="641.82" required></div>
+                    <div class="field"><label for="sensor_3">Sensor 3</label><input type="number" step="any" id="sensor_3" value="1589.70" required></div>
+                    <div class="field"><label for="sensor_4">Sensor 4</label><input type="number" step="any" id="sensor_4" value="1400.60" required></div>
+                    <div class="field"><label for="sensor_5">Sensor 5</label><input type="number" step="any" id="sensor_5" value="14.62" required></div>
+                    <div class="field"><label for="sensor_6">Sensor 6</label><input type="number" step="any" id="sensor_6" value="21.61" required></div>
+                    <div class="field"><label for="sensor_7">Sensor 7</label><input type="number" step="any" id="sensor_7" value="554.36" required></div>
+                    <div class="field"><label for="sensor_8">Sensor 8</label><input type="number" step="any" id="sensor_8" value="2388.06" required></div>
+                    <div class="field"><label for="sensor_9">Sensor 9</label><input type="number" step="any" id="sensor_9" value="9046.19" required></div>
+                    <div class="field"><label for="sensor_10">Sensor 10</label><input type="number" step="any" id="sensor_10" value="1.30" required></div>
+                    <div class="field"><label for="sensor_11">Sensor 11</label><input type="number" step="any" id="sensor_11" value="47.47" required></div>
+                    <div class="field"><label for="sensor_12">Sensor 12</label><input type="number" step="any" id="sensor_12" value="521.66" required></div>
+                    <div class="field"><label for="sensor_13">Sensor 13</label><input type="number" step="any" id="sensor_13" value="2388.02" required></div>
+                    <div class="field"><label for="sensor_14">Sensor 14</label><input type="number" step="any" id="sensor_14" value="8138.62" required></div>
+                    <div class="field"><label for="sensor_15">Sensor 15</label><input type="number" step="any" id="sensor_15" value="8.4195" required></div>
+                    <div class="field"><label for="sensor_16">Sensor 16</label><input type="number" step="any" id="sensor_16" value="0.03" required></div>
+                    <div class="field"><label for="sensor_17">Sensor 17</label><input type="number" step="any" id="sensor_17" value="392.0" required></div>
+                    <div class="field"><label for="sensor_18">Sensor 18</label><input type="number" step="any" id="sensor_18" value="2388.0" required></div>
+                    <div class="field"><label for="sensor_19">Sensor 19</label><input type="number" step="any" id="sensor_19" value="100.0" required></div>
+                    <div class="field"><label for="sensor_20">Sensor 20</label><input type="number" step="any" id="sensor_20" value="39.06" required></div>
+                    <div class="field"><label for="sensor_21">Sensor 21</label><input type="number" step="any" id="sensor_21" value="23.4190" required></div>
+                </div>
+
+                <div class="actions">
+                    <button type="button" class="btn-primary" id="sendBtn">Send Sensor Row</button>
+                    <button type="button" class="btn-primary" id="compareAllBtn">Compare All Models</button>
+                    <button type="button" class="btn-secondary" id="resetEngineBtn">Reset Engine</button>
+                    <button type="button" class="btn-secondary" id="resetAllBtn">Reset All</button>
+                </div>
+
+                <div class="helper">
+                    Tip: keep clicking <strong>Send Sensor Row</strong> or <strong>Compare All Models</strong> to simulate incoming engine cycles. The page auto-increments <strong>Time Cycles</strong> after each successful request.
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Prediction Dashboard</h2>
+
+                <div id="statusBox" class="status-box status-waiting">
+                    No request sent yet.
+                </div>
+
+                <div class="progress-wrap">
+                    <div class="progress-top">
+                        <span>Rolling Window Progress</span>
+                        <span id="progressLabel">0 / 30</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill"></div>
+                    </div>
+                </div>
+
+                <div class="mini-grid">
+                    <div class="mini-stat">
+                        <div class="label">Selected Model</div>
+                        <div class="value" id="selectedModelValue">lr</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="label">Dataset Tag</div>
+                        <div class="value" id="selectedTagValue">FD001</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="label">Engine ID</div>
+                        <div class="value" id="selectedEngineValue">1</div>
+                    </div>
+                </div>
+
+                <div class="prediction-card">
+                    <div class="prediction-label">Predicted Remaining Useful Life</div>
+                    <div class="prediction-value" id="predictionValue">--</div>
+                    <div class="prediction-meta" id="predictionMeta">Prediction will appear once 30 cycles are collected.</div>
+                </div>
+
+                <div class="section-title">Model Comparison</div>
+                <div class="compare-grid">
+                    <div class="compare-card">
+                        <h3>Linear Regression</h3>
+                        <div class="compare-value" id="lrCompareValue">--</div>
+                    </div>
+                    <div class="compare-card">
+                        <h3>Random Forest</h3>
+                        <div class="compare-value" id="rfCompareValue">--</div>
+                    </div>
+                    <div class="compare-card">
+                        <h3>LSTM</h3>
+                        <div class="compare-value" id="lstmCompareValue">--</div>
+                    </div>
+                </div>
+
+                <div class="section-title">Prediction Trend</div>
+                <div class="chart-card">
+                    <div class="prediction-label">Predicted RUL vs Cycle for All Models</div>
+                    <canvas id="predictionChart" width="700" height="320"></canvas>
+                    <div class="chart-legend">
+                        <span><i class="chart-dot" style="background:#1363df;"></i> Linear Regression</span>
+                        <span><i class="chart-dot" style="background:#16a34a;"></i> Random Forest</span>
+                        <span><i class="chart-dot" style="background:#dc2626;"></i> LSTM</span>
+                    </div>
+                </div>
+
+                <h2 style="margin-top: 0;">Prediction History</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Cycle</th>
+                            <th>Mode</th>
+                            <th>Predicted RUL</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody">
+                        <tr>
+                            <td colspan="3" style="color:#6b7280;">No predictions yet.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <details>
+                    <summary>Show Raw JSON Response</summary>
+                    <div class="json-box" id="resultBox">Response will appear here...</div>
+                </details>
+            </div>
         </div>
-    </form>
-
-    <div class="panel">
-        <h3>Prediction Status</h3>
-        <div id="statusBox" class="status waiting">No request sent yet.</div>
-        <div id="predictionBox" class="prediction"></div>
-
-        <h3>Raw Response</h3>
-        <div class="result-box" id="resultBox">Response will appear here...</div>
     </div>
 
     <script>
-        const form = document.getElementById("predictForm");
-        const resultBox = document.getElementById("resultBox");
-        const statusBox = document.getElementById("statusBox");
-        const predictionBox = document.getElementById("predictionBox");
+        const WINDOW_SIZE = 30;
+        const historyRows = [];
+        const compareHistory = [];
+
+        const sendBtn = document.getElementById("sendBtn");
+        const compareAllBtn = document.getElementById("compareAllBtn");
         const resetEngineBtn = document.getElementById("resetEngineBtn");
         const resetAllBtn = document.getElementById("resetAllBtn");
 
+        const statusBox = document.getElementById("statusBox");
+        const resultBox = document.getElementById("resultBox");
+        const predictionValue = document.getElementById("predictionValue");
+        const predictionMeta = document.getElementById("predictionMeta");
+
+        const progressLabel = document.getElementById("progressLabel");
+        const progressFill = document.getElementById("progressFill");
+
+        const selectedModelValue = document.getElementById("selectedModelValue");
+        const selectedTagValue = document.getElementById("selectedTagValue");
+        const selectedEngineValue = document.getElementById("selectedEngineValue");
+
+        const lrCompareValue = document.getElementById("lrCompareValue");
+        const rfCompareValue = document.getElementById("rfCompareValue");
+        const lstmCompareValue = document.getElementById("lstmCompareValue");
+
+        const historyBody = document.getElementById("historyBody");
+
+        const predictionChart = document.getElementById("predictionChart");
+        const chartCtx = predictionChart.getContext("2d");
+
+        function getNumber(id) {
+            return Number(document.getElementById(id).value);
+        }
+
+        function getText(id) {
+            return document.getElementById(id).value;
+        }
+
         function buildPayload() {
             return {
-                model: document.getElementById("model").value,
-                tag: document.getElementById("tag").value,
-                engine_id: Number(document.getElementById("engine_id").value),
-                time_cycles: Number(document.getElementById("time_cycles").value),
-                setting_1: Number(document.getElementById("setting_1").value),
-                setting_2: Number(document.getElementById("setting_2").value),
-                setting_3: Number(document.getElementById("setting_3").value),
-                sensor_1: Number(document.getElementById("sensor_1").value),
-                sensor_2: Number(document.getElementById("sensor_2").value),
-                sensor_3: Number(document.getElementById("sensor_3").value),
-                sensor_4: Number(document.getElementById("sensor_4").value),
-                sensor_5: Number(document.getElementById("sensor_5").value),
-                sensor_6: Number(document.getElementById("sensor_6").value),
-                sensor_7: Number(document.getElementById("sensor_7").value),
-                sensor_8: Number(document.getElementById("sensor_8").value),
-                sensor_9: Number(document.getElementById("sensor_9").value),
-                sensor_10: Number(document.getElementById("sensor_10").value),
-                sensor_11: Number(document.getElementById("sensor_11").value),
-                sensor_12: Number(document.getElementById("sensor_12").value),
-                sensor_13: Number(document.getElementById("sensor_13").value),
-                sensor_14: Number(document.getElementById("sensor_14").value),
-                sensor_15: Number(document.getElementById("sensor_15").value),
-                sensor_16: Number(document.getElementById("sensor_16").value),
-                sensor_17: Number(document.getElementById("sensor_17").value),
-                sensor_18: Number(document.getElementById("sensor_18").value),
-                sensor_19: Number(document.getElementById("sensor_19").value),
-                sensor_20: Number(document.getElementById("sensor_20").value),
-                sensor_21: Number(document.getElementById("sensor_21").value)
+                model: getText("model"),
+                tag: getText("tag"),
+                engine_id: getNumber("engine_id"),
+                time_cycles: getNumber("time_cycles"),
+                setting_1: getNumber("setting_1"),
+                setting_2: getNumber("setting_2"),
+                setting_3: getNumber("setting_3"),
+                sensor_1: getNumber("sensor_1"),
+                sensor_2: getNumber("sensor_2"),
+                sensor_3: getNumber("sensor_3"),
+                sensor_4: getNumber("sensor_4"),
+                sensor_5: getNumber("sensor_5"),
+                sensor_6: getNumber("sensor_6"),
+                sensor_7: getNumber("sensor_7"),
+                sensor_8: getNumber("sensor_8"),
+                sensor_9: getNumber("sensor_9"),
+                sensor_10: getNumber("sensor_10"),
+                sensor_11: getNumber("sensor_11"),
+                sensor_12: getNumber("sensor_12"),
+                sensor_13: getNumber("sensor_13"),
+                sensor_14: getNumber("sensor_14"),
+                sensor_15: getNumber("sensor_15"),
+                sensor_16: getNumber("sensor_16"),
+                sensor_17: getNumber("sensor_17"),
+                sensor_18: getNumber("sensor_18"),
+                sensor_19: getNumber("sensor_19"),
+                sensor_20: getNumber("sensor_20"),
+                sensor_21: getNumber("sensor_21")
             };
         }
 
-        function updateUI(result) {
+        function updateTopStats(payload) {
+            selectedModelValue.textContent = payload.model;
+            selectedTagValue.textContent = payload.tag;
+            selectedEngineValue.textContent = payload.engine_id;
+        }
+
+        function updateProgress(cyclesCollected) {
+            const safeValue = Math.max(0, Math.min(WINDOW_SIZE, cyclesCollected || 0));
+            const percent = (safeValue / WINDOW_SIZE) * 100;
+
+            progressLabel.textContent = `${safeValue} / ${WINDOW_SIZE}`;
+            progressFill.style.width = `${percent}%`;
+        }
+
+        function clearComparison() {
+            lrCompareValue.textContent = "--";
+            rfCompareValue.textContent = "--";
+            lstmCompareValue.textContent = "--";
+        }
+
+        function renderHistory() {
+            if (historyRows.length === 0) {
+                historyBody.innerHTML = `
+                    <tr>
+                        <td colspan="3" style="color:#6b7280;">No predictions yet.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            historyBody.innerHTML = historyRows
+                .slice()
+                .reverse()
+                .map(row => `
+                    <tr>
+                        <td>${row.cycle}</td>
+                        <td>${row.mode}</td>
+                        <td>${row.predicted_rul.toFixed(2)}</td>
+                    </tr>
+                `)
+                .join("");
+        }
+
+        function drawPredictionChart() {
+            const canvas = predictionChart;
+            const ctx = chartCtx;
+
+            const width = canvas.width;
+            const height = canvas.height;
+
+            ctx.clearRect(0, 0, width, height);
+
+            const leftPad = 60;
+            const rightPad = 20;
+            const topPad = 20;
+            const bottomPad = 40;
+
+            const plotWidth = width - leftPad - rightPad;
+            const plotHeight = height - topPad - bottomPad;
+
+            if (compareHistory.length === 0) {
+                ctx.fillStyle = "#6b7280";
+                ctx.font = "14px Arial";
+                ctx.fillText("No comparison data yet. Click 'Compare All Models' after cycle 30.", 60, 160);
+                return;
+            }
+
+            const cycles = compareHistory.map(row => row.cycle);
+            const lrValues = compareHistory.map(row => row.lr);
+            const rfValues = compareHistory.map(row => row.rf);
+            const lstmValues = compareHistory.map(row => row.lstm);
+
+            const allY = [...lrValues, ...rfValues, ...lstmValues];
+
+            const minX = Math.min(...cycles);
+            const maxX = Math.max(...cycles);
+
+            let minY = Math.min(...allY);
+            let maxY = Math.max(...allY);
+
+            if (minY === maxY) {
+                minY -= 1;
+                maxY += 1;
+            } else {
+                const yPad = (maxY - minY) * 0.1;
+                minY -= yPad;
+                maxY += yPad;
+            }
+
+            function xScale(x) {
+                if (maxX === minX) return leftPad + plotWidth / 2;
+                return leftPad + ((x - minX) / (maxX - minX)) * plotWidth;
+            }
+
+            function yScale(y) {
+                return topPad + plotHeight - ((y - minY) / (maxY - minY)) * plotHeight;
+            }
+
+            ctx.strokeStyle = "#94a3b8";
+            ctx.lineWidth = 1;
+
+            ctx.beginPath();
+            ctx.moveTo(leftPad, topPad);
+            ctx.lineTo(leftPad, topPad + plotHeight);
+            ctx.lineTo(leftPad + plotWidth, topPad + plotHeight);
+            ctx.stroke();
+
+            ctx.fillStyle = "#6b7280";
+            ctx.font = "12px Arial";
+
+            const yTicks = 5;
+            for (let i = 0; i <= yTicks; i++) {
+                const yVal = minY + ((maxY - minY) * i) / yTicks;
+                const y = yScale(yVal);
+
+                ctx.strokeStyle = "#e5e7eb";
+                ctx.beginPath();
+                ctx.moveTo(leftPad, y);
+                ctx.lineTo(leftPad + plotWidth, y);
+                ctx.stroke();
+
+                ctx.fillStyle = "#6b7280";
+                ctx.fillText(yVal.toFixed(1), 8, y + 4);
+            }
+
+            const xTicks = Math.min(compareHistory.length, 6);
+            for (let i = 0; i < xTicks; i++) {
+                const idx = Math.round((i * (cycles.length - 1)) / Math.max(1, xTicks - 1));
+                const xVal = cycles[idx];
+                const x = xScale(xVal);
+
+                ctx.strokeStyle = "#e5e7eb";
+                ctx.beginPath();
+                ctx.moveTo(x, topPad);
+                ctx.lineTo(x, topPad + plotHeight);
+                ctx.stroke();
+
+                ctx.fillStyle = "#6b7280";
+                ctx.fillText(String(xVal), x - 8, topPad + plotHeight + 18);
+            }
+
+            ctx.fillStyle = "#374151";
+            ctx.font = "13px Arial";
+            ctx.fillText("Cycle", leftPad + plotWidth / 2 - 15, height - 8);
+
+            ctx.save();
+            ctx.translate(16, topPad + plotHeight / 2 + 20);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText("Predicted RUL", 0, 0);
+            ctx.restore();
+
+            function drawSeries(values, color) {
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+
+                values.forEach((val, index) => {
+                    const x = xScale(cycles[index]);
+                    const y = yScale(val);
+
+                    if (index === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+
+                ctx.stroke();
+
+                values.forEach((val, index) => {
+                    const x = xScale(cycles[index]);
+                    const y = yScale(val);
+
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.arc(x, y, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+
+            drawSeries(lrValues, "#1363df");
+            drawSeries(rfValues, "#16a34a");
+            drawSeries(lstmValues, "#dc2626");
+        }
+
+        function updateUI(result, payload = null) {
             resultBox.textContent = JSON.stringify(result, null, 2);
 
+            if (payload) {
+                updateTopStats(payload);
+            }
+
+            const cyclesCollected = result.cycles_collected || 0;
+            updateProgress(cyclesCollected);
+
             if (result.ok && result.window_ready) {
-                statusBox.className = "status ready";
+                statusBox.className = "status-box status-ready";
                 statusBox.textContent = `Prediction ready for Engine ${result.engine_id} (${result.tag})`;
-                predictionBox.textContent = `Predicted RUL: ${result.predicted_rul.toFixed(2)}`;
-            } else if (result.ok && !result.window_ready) {
-                statusBox.className = "status waiting";
-                statusBox.textContent = `Cycles collected: ${result.cycles_collected}. ${result.message}`;
-                predictionBox.textContent = "";
+
+                predictionValue.textContent = result.predicted_rul.toFixed(2);
+                predictionMeta.textContent = `Model: ${result.model} | Cycles Collected: ${result.cycles_collected}`;
+
+                historyRows.push({
+                    cycle: payload ? payload.time_cycles : result.cycles_collected,
+                    mode: result.model,
+                    predicted_rul: result.predicted_rul
+                });
+                renderHistory();
+            } else if (result.ok && result.window_ready === false) {
+                statusBox.className = "status-box status-waiting";
+                statusBox.textContent = result.message || "Waiting for enough cycles.";
+
+                predictionValue.textContent = "--";
+                predictionMeta.textContent = `Model: ${result.model || payload?.model || "--"} | Engine not ready yet`;
+                clearComparison();
+            } else if (result.ok) {
+                statusBox.className = "status-box status-ready";
+                statusBox.textContent = result.message || "Operation completed.";
+
+                predictionValue.textContent = "--";
+                predictionMeta.textContent = "No active prediction";
+                clearComparison();
             } else {
-                statusBox.className = "status error";
+                statusBox.className = "status-box status-error";
                 statusBox.textContent = result.error || "Request failed";
-                predictionBox.textContent = "";
+
+                predictionValue.textContent = "--";
+                predictionMeta.textContent = "Check the request and try again";
+                clearComparison();
             }
         }
 
-        // Submit one sensor row and automatically advance to the next cycle.
-        form.addEventListener("submit", async function (event) {
-            event.preventDefault();
-
+        async function sendSensorRow() {
             const payload = buildPayload();
 
             try {
                 const response = await fetch("/predict/stream", {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
                 });
 
                 const result = await response.json();
-                updateUI(result);
+                updateUI(result, payload);
 
                 if (result.ok) {
                     const cycleInput = document.getElementById("time_cycles");
                     cycleInput.value = Number(cycleInput.value) + 1;
                 }
             } catch (error) {
-                updateUI({ ok: false, error: error.message });
+                updateUI({ ok: false, error: error.message }, payload);
             }
-        });
+        }
 
-        // Reset the currently selected engine state.
-        resetEngineBtn.addEventListener("click", async function () {
+        async function compareAllModels() {
+            const payload = buildPayload();
+
+            try {
+                const response = await fetch("/predict/stream/all", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                resultBox.textContent = JSON.stringify(result, null, 2);
+                updateTopStats(payload);
+
+                const cyclesCollected = result.cycles_collected || 0;
+                updateProgress(cyclesCollected);
+
+                if (result.ok && result.window_ready) {
+                    statusBox.className = "status-box status-ready";
+                    statusBox.textContent = `All model predictions ready for Engine ${result.engine_id} (${result.tag})`;
+
+                    lrCompareValue.textContent = result.predictions.lr.toFixed(2);
+                    rfCompareValue.textContent = result.predictions.rf.toFixed(2);
+                    lstmCompareValue.textContent = result.predictions.lstm.toFixed(2);
+
+                    predictionValue.textContent = result.predictions[payload.model].toFixed(2);
+                    predictionMeta.textContent = `Selected model: ${payload.model} | Cycles Collected: ${result.cycles_collected}`;
+
+                    compareHistory.push({
+                        cycle: payload.time_cycles,
+                        lr: result.predictions.lr,
+                        rf: result.predictions.rf,
+                        lstm: result.predictions.lstm
+                    });
+                    drawPredictionChart();
+
+                    historyRows.push({
+                        cycle: payload.time_cycles,
+                        mode: "all",
+                        predicted_rul: result.predictions[payload.model]
+                    });
+                    renderHistory();
+                } else if (result.ok && result.window_ready === false) {
+                    statusBox.className = "status-box status-waiting";
+                    statusBox.textContent = result.message || "Waiting for enough cycles.";
+
+                    predictionValue.textContent = "--";
+                    predictionMeta.textContent = "Comparison will appear once 30 cycles are collected.";
+                    clearComparison();
+                } else {
+                    statusBox.className = "status-box status-error";
+                    statusBox.textContent = result.error || "Request failed";
+
+                    predictionValue.textContent = "--";
+                    predictionMeta.textContent = "Check the request and try again";
+                    clearComparison();
+                }
+
+                if (result.ok) {
+                    const cycleInput = document.getElementById("time_cycles");
+                    cycleInput.value = Number(cycleInput.value) + 1;
+                }
+            } catch (error) {
+                updateUI({ ok: false, error: error.message }, payload);
+                clearComparison();
+            }
+        }
+
+        async function resetCurrentEngine() {
             const payload = {
-                tag: document.getElementById("tag").value,
-                engine_id: Number(document.getElementById("engine_id").value)
+                tag: getText("tag"),
+                engine_id: getNumber("engine_id")
             };
 
             try {
                 const response = await fetch("/engines/reset", {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
                 });
 
                 const result = await response.json();
-                updateUI(result);
+                updateUI(result, {
+                    model: getText("model"),
+                    tag: payload.tag,
+                    engine_id: payload.engine_id,
+                    time_cycles: 0
+                });
+
                 document.getElementById("time_cycles").value = 1;
+                updateProgress(0);
+                predictionValue.textContent = "--";
+                predictionMeta.textContent = "Prediction will appear once 30 cycles are collected.";
+                historyRows.length = 0;
+                compareHistory.length = 0;
+                clearComparison();
+                renderHistory();
+                drawPredictionChart();
             } catch (error) {
                 updateUI({ ok: false, error: error.message });
             }
-        });
+        }
 
-        // Reset all engine states currently stored in backend memory.
-        resetAllBtn.addEventListener("click", async function () {
+        async function resetAllEngines() {
             try {
                 const response = await fetch("/engines/reset_all", {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({})
                 });
 
                 const result = await response.json();
-                updateUI(result);
+                updateUI(result, {
+                    model: getText("model"),
+                    tag: getText("tag"),
+                    engine_id: getNumber("engine_id"),
+                    time_cycles: 0
+                });
+
                 document.getElementById("time_cycles").value = 1;
+                updateProgress(0);
+                predictionValue.textContent = "--";
+                predictionMeta.textContent = "Prediction will appear once 30 cycles are collected.";
+                historyRows.length = 0;
+                compareHistory.length = 0;
+                clearComparison();
+                renderHistory();
+                drawPredictionChart();
             } catch (error) {
                 updateUI({ ok: false, error: error.message });
             }
-        });
+        }
+
+        sendBtn.addEventListener("click", sendSensorRow);
+        compareAllBtn.addEventListener("click", compareAllModels);
+        resetEngineBtn.addEventListener("click", resetCurrentEngine);
+        resetAllBtn.addEventListener("click", resetAllEngines);
+
+        clearComparison();
+        renderHistory();
+        updateProgress(0);
+        drawPredictionChart();
     </script>
 </body>
 </html>

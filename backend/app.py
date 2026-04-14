@@ -164,6 +164,66 @@ def predict_stream():
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
+# Predict with all three models at once using one shared streaming update.
+@app.route("/predict/stream/all", methods=["POST"])
+def predict_stream_all():
+    try:
+        raw_row = request.get_json()
+
+        if raw_row is None:
+            return jsonify({"ok": False, "error": "Request body must be valid JSON"}), 400
+
+        preprocess_result = preprocess_single_row(
+            raw_row,
+            assets["preprocessing_artifacts"]
+        )
+
+        processed_row = preprocess_result["processed_row"]
+
+        tag = raw_row["tag"]
+        engine_id = raw_row["engine_id"]
+
+        current_length = state_manager.add_processed_row(
+            tag=tag,
+            engine_id=engine_id,
+            processed_row=processed_row
+        )
+
+        if not state_manager.is_window_ready(tag, engine_id):
+            remaining = assets["preprocessing_artifacts"]["window_size"] - current_length
+
+            return jsonify({
+                "ok": True,
+                "mode": "stream_all",
+                "tag": tag,
+                "engine_id": engine_id,
+                "window_ready": False,
+                "cycles_collected": current_length,
+                "message": f"Need {remaining} more cycles before prediction"
+            })
+
+        window = state_manager.get_window(tag, engine_id)
+
+        predictions = {
+            "lr": predict_rul("lr", window, assets),
+            "rf": predict_rul("rf", window, assets),
+            "lstm": predict_rul("lstm", window, assets)
+        }
+
+        return jsonify({
+            "ok": True,
+            "mode": "stream_all",
+            "tag": tag,
+            "engine_id": engine_id,
+            "window_ready": True,
+            "cycles_collected": current_length,
+            "predictions": predictions
+        })
+
+    except ValueError as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
 
 # Reset one engine's rolling history.
 @app.route("/engines/reset", methods=["POST"])
