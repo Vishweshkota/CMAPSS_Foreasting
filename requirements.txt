@@ -17,3 +17,6 @@ torch
 # Notebook support
 jupyterlab
 ipykernel
+
+# Swagger
+flasgger

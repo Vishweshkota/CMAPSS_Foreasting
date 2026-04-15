@@ -1,12 +1,14 @@
 from flask import Flask, request, jsonify, render_template
+from flasgger import Swagger
+import numpy as np
+import pandas as pd
 
 from model_loader import load_all_assets
 from preprocessing import preprocess_single_row
 from state import EngineStateManager
 from inference import predict_rul
 
-import numpy as np
-import pandas as pd
+
 
 # Build a fixed 30-row model window from an uploaded CSV file.
 def build_window_from_uploaded_file(df, tag, engine_id, rows_to_use, artifacts):
@@ -98,6 +100,20 @@ def build_window_from_uploaded_file(df, tag, engine_id, rows_to_use, artifacts):
 # Create the Flask app and load all models/artifacts once at startup.
 app = Flask(__name__)
 
+swagger_template = {
+    "swagger": "2.0",
+    "info": {
+        "title": "CMAPSS Turbofan RUL Prediction API",
+        "description": "REST API for Remaining Useful Life prediction using Linear Regression, Random Forest, and LSTM on the NASA CMAPSS dataset.",
+        "version": "1.0.0"
+    },
+    "host": "127.0.0.1:5000",
+    "basePath": "/",
+    "schemes": ["http"]
+}
+
+swagger = Swagger(app, template=swagger_template)
+
 assets = load_all_assets()
 state_manager = EngineStateManager(
     window_size=assets["preprocessing_artifacts"]["window_size"]
@@ -107,12 +123,47 @@ state_manager = EngineStateManager(
 # Simple homepage for browser testing.
 @app.route("/")
 def home():
+    """
+    Render the browser UI
+    ---
+    tags:
+      - UI
+    responses:
+      200:
+        description: HTML homepage for the CMAPSS predictor UI
+    """
     return render_template("index.html")
 
 
 # Health check route to confirm the backend is running.
 @app.route("/health", methods=["GET"])
 def health():
+    """
+    Health check endpoint
+    ---
+    tags:
+      - System
+    responses:
+      200:
+        description: Backend is running successfully
+        schema:
+          type: object
+          properties:
+            ok:
+              type: boolean
+              example: true
+            message:
+              type: string
+              example: Flask backend is running
+            available_models:
+              type: array
+              items:
+                type: string
+              example: ["lr", "rf", "lstm"]
+            window_size:
+              type: integer
+              example: 30
+    """
     return jsonify({
         "ok": True,
         "message": "Flask backend is running",
@@ -124,6 +175,33 @@ def health():
 # Return basic model and input information for the client.
 @app.route("/models", methods=["GET"])
 def models():
+    """
+    Get model and preprocessing metadata
+    ---
+    tags:
+      - Metadata
+    responses:
+      200:
+        description: Available models and preprocessing metadata
+        schema:
+          type: object
+          properties:
+            available_models:
+              type: array
+              items:
+                type: string
+            required_raw_fields:
+              type: array
+              items:
+                type: string
+            feature_cols:
+              type: array
+              items:
+                type: string
+            window_size:
+              type: integer
+              example: 30
+    """
     return jsonify({
         "available_models": ["lr", "rf", "lstm"],
         "required_raw_fields": (
@@ -139,6 +217,47 @@ def models():
 # Predict from a full processed 30-cycle window sent directly by the client.
 @app.route("/predict/window", methods=["POST"])
 def predict_window():
+    """
+    Predict RUL from a full processed feature window
+    ---
+    tags:
+      - Prediction
+    consumes:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - model
+            - window
+          properties:
+            model:
+              type: string
+              enum: [lr, rf, lstm]
+            tag:
+              type: string
+              example: FD001
+            engine_id:
+              type: integer
+              example: 1
+            window:
+              type: array
+              description: A processed 30-row feature window
+              items:
+                type: array
+                items:
+                  type: number
+    responses:
+      200:
+        description: Prediction completed successfully
+      400:
+        description: Invalid request data
+      500:
+        description: Internal server error
+    """
     try:
         payload = request.get_json()
 
@@ -172,7 +291,6 @@ def predict_window():
                     "error": f"Each row must contain exactly {feature_count} values"
                 }), 400
 
-        import numpy as np
         window_array = np.array(window, dtype=np.float32)
 
         predicted_rul = predict_rul(model_name, window_array, assets)
@@ -194,6 +312,91 @@ def predict_window():
 # Predict from one raw sensor row at a time using rolling state per engine.
 @app.route("/predict/stream", methods=["POST"])
 def predict_stream():
+    """
+    Predict RUL from one streaming sensor row
+    ---
+    tags:
+      - Prediction
+    consumes:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - model
+            - tag
+            - engine_id
+            - time_cycles
+          properties:
+            model:
+              type: string
+              enum: [lr, rf, lstm]
+            tag:
+              type: string
+              enum: [FD001, FD002, FD003, FD004]
+            engine_id:
+              type: integer
+            time_cycles:
+              type: integer
+            setting_1:
+              type: number
+            setting_2:
+              type: number
+            setting_3:
+              type: number
+            sensor_1:
+              type: number
+            sensor_2:
+              type: number
+            sensor_3:
+              type: number
+            sensor_4:
+              type: number
+            sensor_5:
+              type: number
+            sensor_6:
+              type: number
+            sensor_7:
+              type: number
+            sensor_8:
+              type: number
+            sensor_9:
+              type: number
+            sensor_10:
+              type: number
+            sensor_11:
+              type: number
+            sensor_12:
+              type: number
+            sensor_13:
+              type: number
+            sensor_14:
+              type: number
+            sensor_15:
+              type: number
+            sensor_16:
+              type: number
+            sensor_17:
+              type: number
+            sensor_18:
+              type: number
+            sensor_19:
+              type: number
+            sensor_20:
+              type: number
+            sensor_21:
+              type: number
+    responses:
+      200:
+        description: Streaming prediction response
+      400:
+        description: Invalid request
+      500:
+        description: Internal server error
+    """
     try:
         raw_row = request.get_json()
 
@@ -253,9 +456,91 @@ def predict_stream():
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
+
 # Predict with all three models at once using one shared streaming update.
 @app.route("/predict/stream/all", methods=["POST"])
 def predict_stream_all():
+    """
+    Predict RUL with all three models from one streaming sensor row
+    ---
+    tags:
+      - Prediction
+    consumes:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - tag
+            - engine_id
+            - time_cycles
+          properties:
+            tag:
+              type: string
+              enum: [FD001, FD002, FD003, FD004]
+            engine_id:
+              type: integer
+            time_cycles:
+              type: integer
+            setting_1:
+              type: number
+            setting_2:
+              type: number
+            setting_3:
+              type: number
+            sensor_1:
+              type: number
+            sensor_2:
+              type: number
+            sensor_3:
+              type: number
+            sensor_4:
+              type: number
+            sensor_5:
+              type: number
+            sensor_6:
+              type: number
+            sensor_7:
+              type: number
+            sensor_8:
+              type: number
+            sensor_9:
+              type: number
+            sensor_10:
+              type: number
+            sensor_11:
+              type: number
+            sensor_12:
+              type: number
+            sensor_13:
+              type: number
+            sensor_14:
+              type: number
+            sensor_15:
+              type: number
+            sensor_16:
+              type: number
+            sensor_17:
+              type: number
+            sensor_18:
+              type: number
+            sensor_19:
+              type: number
+            sensor_20:
+              type: number
+            sensor_21:
+              type: number
+    responses:
+      200:
+        description: Multi-model streaming prediction response
+      400:
+        description: Invalid request
+      500:
+        description: Internal server error
+    """
     try:
         raw_row = request.get_json()
 
@@ -314,9 +599,41 @@ def predict_stream_all():
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
+
 # Reset one engine's rolling history.
 @app.route("/engines/reset", methods=["POST"])
 def reset_engine():
+    """
+    Reset one engine state
+    ---
+    tags:
+      - Engine State
+    consumes:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - tag
+            - engine_id
+          properties:
+            tag:
+              type: string
+              example: FD001
+            engine_id:
+              type: integer
+              example: 1
+    responses:
+      200:
+        description: Engine state reset successfully
+      400:
+        description: Invalid request
+      500:
+        description: Internal server error
+    """
     try:
         payload = request.get_json()
 
@@ -343,6 +660,17 @@ def reset_engine():
 # Reset all in-memory engine histories.
 @app.route("/engines/reset_all", methods=["POST"])
 def reset_all():
+    """
+    Reset all engine states
+    ---
+    tags:
+      - Engine State
+    responses:
+      200:
+        description: All engine states reset successfully
+      500:
+        description: Internal server error
+    """
     try:
         state_manager.reset_all()
 
@@ -354,9 +682,88 @@ def reset_all():
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
+
 # Predict RUL from an uploaded CSV file of sensor readings.
 @app.route("/predict/file", methods=["POST"])
 def predict_file():
+    """
+    Predict RUL from uploaded CSV file
+    ---
+    tags:
+      - Prediction
+    consumes:
+      - multipart/form-data
+    parameters:
+      - name: file
+        in: formData
+        type: file
+        required: true
+        description: CSV file containing sensor readings
+      - name: model
+        in: formData
+        type: string
+        required: true
+        enum: [lr, rf, lstm]
+      - name: tag
+        in: formData
+        type: string
+        required: true
+        enum: [FD001, FD002, FD003, FD004]
+      - name: engine_id
+        in: formData
+        type: integer
+        required: true
+      - name: rows_to_use
+        in: formData
+        type: integer
+        required: true
+    responses:
+      200:
+        description: File prediction completed successfully
+        schema:
+          type: object
+          properties:
+            ok:
+              type: boolean
+              example: true
+            mode:
+              type: string
+              example: file
+            model:
+              type: string
+              example: lr
+            tag:
+              type: string
+              example: FD001
+            engine_id:
+              type: integer
+              example: 1
+            rows_requested:
+              type: integer
+              example: 30
+            rows_available_after_filter:
+              type: integer
+              example: 50
+            rows_selected_before_windowing:
+              type: integer
+              example: 30
+            final_window_rows:
+              type: integer
+              example: 30
+            padded:
+              type: boolean
+              example: false
+            last_cycle_used:
+              type: integer
+              example: 50
+            predicted_rul:
+              type: number
+              example: 112.45
+      400:
+        description: Invalid request
+      500:
+        description: Internal server error
+    """
     try:
         uploaded_file = request.files.get("file")
         model_name = request.form.get("model")
@@ -410,6 +817,7 @@ def predict_file():
         return jsonify({"ok": False, "error": str(e)}), 400
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
+
 
 # Start the local Flask development server.
 if __name__ == "__main__":

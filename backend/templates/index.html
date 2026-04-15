@@ -55,6 +55,14 @@
             font-size: 15px;
         }
 
+        .hero-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
         .layout {
             display: grid;
             grid-template-columns: 1.35fr 0.95fr;
@@ -110,7 +118,8 @@
 
         input,
         select,
-        button {
+        button,
+        a.btn-link {
             font-size: 14px;
             border-radius: 10px;
         }
@@ -135,11 +144,16 @@
             margin-top: 18px;
         }
 
-        button {
+        button,
+        a.btn-link {
             border: none;
             padding: 11px 16px;
             cursor: pointer;
             font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .btn-primary {
@@ -430,6 +444,9 @@
         <div class="hero">
             <h1>CMAPSS Turbofan RUL Predictor</h1>
             <p>Use streaming inference, compare all three models, or upload a CSV file and predict RUL from the last N rows.</p>
+            <div class="hero-actions">
+                <a href="/apidocs/" target="_blank" rel="noopener noreferrer" class="btn-link btn-secondary">Open Swagger Docs</a>
+            </div>
         </div>
 
         <div class="layout">
@@ -491,6 +508,7 @@
 
                     <div class="actions">
                         <button type="button" class="btn-primary" id="predictFileBtn">Predict From File</button>
+                        <a href="/apidocs/" target="_blank" rel="noopener noreferrer" class="btn-link btn-secondary">API Docs</a>
                     </div>
                 </div>
 
@@ -540,6 +558,7 @@
                     <button type="button" class="btn-primary" id="compareAllBtn">Compare All Models</button>
                     <button type="button" class="btn-secondary" id="resetEngineBtn">Reset Engine</button>
                     <button type="button" class="btn-secondary" id="resetAllBtn">Reset All</button>
+                    <a href="/apidocs/" target="_blank" rel="noopener noreferrer" class="btn-link btn-secondary">Swagger Docs</a>
                 </div>
 
                 <div class="helper">
@@ -1195,3 +1214,4 @@ Message: ${result.message || "Need more cycles before prediction."}`;
     </script>
 </body>
 </html>
+
