@@ -94,24 +94,36 @@
             flex-direction: column;
         }
 
+        .field-wide {
+            grid-column: span 2;
+        }
+
+        .field-full {
+            grid-column: 1 / -1;
+        }
+
         label {
             font-weight: 600;
             margin-bottom: 6px;
             font-size: 14px;
         }
 
-        input, select, button {
+        input,
+        select,
+        button {
             font-size: 14px;
             border-radius: 10px;
         }
 
-        input, select {
+        input,
+        select {
             padding: 10px 12px;
             border: 1px solid #cbd5e1;
             background: #fff;
         }
 
-        input:focus, select:focus {
+        input:focus,
+        select:focus {
             outline: 2px solid #bfdbfe;
             border-color: var(--primary);
         }
@@ -146,6 +158,21 @@
 
         .btn-secondary:hover {
             background: #475569;
+        }
+
+        .upload-box {
+            border: 1px dashed #b7c7da;
+            border-radius: 14px;
+            padding: 16px;
+            background: #f8fbff;
+            margin-top: 6px;
+        }
+
+        .upload-box p {
+            margin: 0 0 10px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
         }
 
         .status-box {
@@ -314,13 +341,26 @@
             display: inline-block;
         }
 
+        .info-box {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            background: #f8fbff;
+            margin-bottom: 16px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: pre-line;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
             font-size: 14px;
         }
 
-        th, td {
+        th,
+        td {
             text-align: left;
             padding: 10px;
             border-bottom: 1px solid #e5e7eb;
@@ -358,6 +398,7 @@
             margin-top: 12px;
             color: var(--muted);
             font-size: 13px;
+            line-height: 1.5;
         }
 
         @media (max-width: 1024px) {
@@ -373,6 +414,11 @@
                 grid-template-columns: 1fr;
             }
 
+            .field-wide,
+            .field-full {
+                grid-column: auto;
+            }
+
             .prediction-value {
                 font-size: 30px;
             }
@@ -383,7 +429,7 @@
     <div class="page">
         <div class="hero">
             <h1>CMAPSS Turbofan RUL Predictor</h1>
-            <p>Stream one raw sensor row at a time and receive a Remaining Useful Life prediction once the rolling 30-cycle window is ready.</p>
+            <p>Use streaming inference, compare all three models, or upload a CSV file and predict RUL from the last N rows.</p>
         </div>
 
         <div class="layout">
@@ -413,12 +459,38 @@
 
                     <div class="field">
                         <label for="engine_id">Engine ID</label>
-                        <input type="number" id="engine_id" value="1" required>
+                        <input type="number" id="engine_id" value="1" min="1" required>
                     </div>
 
                     <div class="field">
                         <label for="time_cycles">Time Cycles</label>
-                        <input type="number" id="time_cycles" value="1" required>
+                        <input type="number" id="time_cycles" value="1" min="1" required>
+                    </div>
+                </div>
+
+                <div class="section-title">File Upload Prediction</div>
+                <div class="upload-box">
+                    <p>
+                        Upload a CSV file with sensor readings and choose how many latest rows to use.
+                        Required columns: <strong>time_cycles</strong>, <strong>setting_1</strong>, <strong>setting_2</strong>,
+                        <strong>setting_3</strong>, <strong>sensor_1</strong> to <strong>sensor_21</strong>.
+                        If your file contains multiple engines, the selected <strong>Engine ID</strong> will be used to filter rows.
+                    </p>
+
+                    <div class="grid">
+                        <div class="field field-wide">
+                            <label for="upload_file">CSV File</label>
+                            <input type="file" id="upload_file" accept=".csv">
+                        </div>
+
+                        <div class="field">
+                            <label for="rows_to_use">Rows To Use</label>
+                            <input type="number" id="rows_to_use" value="30" min="1">
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <button type="button" class="btn-primary" id="predictFileBtn">Predict From File</button>
                     </div>
                 </div>
 
@@ -471,7 +543,8 @@
                 </div>
 
                 <div class="helper">
-                    Tip: keep clicking <strong>Send Sensor Row</strong> or <strong>Compare All Models</strong> to simulate incoming engine cycles. The page auto-increments <strong>Time Cycles</strong> after each successful request.
+                    Streaming tip: click <strong>Send Sensor Row</strong> or <strong>Compare All Models</strong> repeatedly to simulate incoming cycles.
+                    The page auto-increments <strong>Time Cycles</strong> after successful streaming requests.
                 </div>
             </div>
 
@@ -510,8 +583,10 @@
                 <div class="prediction-card">
                     <div class="prediction-label">Predicted Remaining Useful Life</div>
                     <div class="prediction-value" id="predictionValue">--</div>
-                    <div class="prediction-meta" id="predictionMeta">Prediction will appear once 30 cycles are collected.</div>
+                    <div class="prediction-meta" id="predictionMeta">Prediction will appear here after streaming, compare-all, or file upload prediction.</div>
                 </div>
+
+                <div class="info-box" id="infoBox">No detailed response summary yet.</div>
 
                 <div class="section-title">Model Comparison</div>
                 <div class="compare-grid">
@@ -544,7 +619,7 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Cycle</th>
+                            <th>Cycle / Last Row</th>
                             <th>Mode</th>
                             <th>Predicted RUL</th>
                         </tr>
@@ -571,6 +646,7 @@
 
         const sendBtn = document.getElementById("sendBtn");
         const compareAllBtn = document.getElementById("compareAllBtn");
+        const predictFileBtn = document.getElementById("predictFileBtn");
         const resetEngineBtn = document.getElementById("resetEngineBtn");
         const resetAllBtn = document.getElementById("resetAllBtn");
 
@@ -578,6 +654,7 @@
         const resultBox = document.getElementById("resultBox");
         const predictionValue = document.getElementById("predictionValue");
         const predictionMeta = document.getElementById("predictionMeta");
+        const infoBox = document.getElementById("infoBox");
 
         const progressLabel = document.getElementById("progressLabel");
         const progressFill = document.getElementById("progressFill");
@@ -591,7 +668,6 @@
         const lstmCompareValue = document.getElementById("lstmCompareValue");
 
         const historyBody = document.getElementById("historyBody");
-
         const predictionChart = document.getElementById("predictionChart");
         const chartCtx = predictionChart.getContext("2d");
 
@@ -650,10 +726,24 @@
             progressFill.style.width = `${percent}%`;
         }
 
-        function clearComparison() {
+        function clearComparisonCards() {
             lrCompareValue.textContent = "--";
             rfCompareValue.textContent = "--";
             lstmCompareValue.textContent = "--";
+        }
+
+        function setStatus(type, message) {
+            statusBox.className = `status-box ${type}`;
+            statusBox.textContent = message;
+        }
+
+        function appendHistory(cycle, mode, predictedRul) {
+            historyRows.push({
+                cycle: cycle,
+                mode: mode,
+                predicted_rul: predictedRul
+            });
+            renderHistory();
         }
 
         function renderHistory() {
@@ -821,7 +911,7 @@
             drawSeries(lstmValues, "#dc2626");
         }
 
-        function updateUI(result, payload = null) {
+        function updateStreamUI(result, payload = null) {
             resultBox.textContent = JSON.stringify(result, null, 2);
 
             if (payload) {
@@ -832,39 +922,68 @@
             updateProgress(cyclesCollected);
 
             if (result.ok && result.window_ready) {
-                statusBox.className = "status-box status-ready";
-                statusBox.textContent = `Prediction ready for Engine ${result.engine_id} (${result.tag})`;
-
+                setStatus("status-ready", `Prediction ready for Engine ${result.engine_id} (${result.tag})`);
                 predictionValue.textContent = result.predicted_rul.toFixed(2);
                 predictionMeta.textContent = `Model: ${result.model} | Cycles Collected: ${result.cycles_collected}`;
-
-                historyRows.push({
-                    cycle: payload ? payload.time_cycles : result.cycles_collected,
-                    mode: result.model,
-                    predicted_rul: result.predicted_rul
-                });
-                renderHistory();
+                infoBox.textContent = `Streaming prediction completed.
+Mode: ${result.mode}
+Model: ${result.model}
+Cycles collected: ${result.cycles_collected}
+Engine: ${result.engine_id}
+Dataset: ${result.tag}`;
+                appendHistory(payload ? payload.time_cycles : result.cycles_collected, result.model, result.predicted_rul);
             } else if (result.ok && result.window_ready === false) {
-                statusBox.className = "status-box status-waiting";
-                statusBox.textContent = result.message || "Waiting for enough cycles.";
-
+                setStatus("status-waiting", result.message || "Waiting for enough cycles.");
                 predictionValue.textContent = "--";
                 predictionMeta.textContent = `Model: ${result.model || payload?.model || "--"} | Engine not ready yet`;
-                clearComparison();
+                infoBox.textContent = `Streaming window not ready yet.
+Cycles collected: ${result.cycles_collected || 0}
+Message: ${result.message || "Need more cycles before prediction."}`;
             } else if (result.ok) {
-                statusBox.className = "status-box status-ready";
-                statusBox.textContent = result.message || "Operation completed.";
-
+                setStatus("status-ready", result.message || "Operation completed.");
                 predictionValue.textContent = "--";
                 predictionMeta.textContent = "No active prediction";
-                clearComparison();
+                infoBox.textContent = result.message || "Operation completed.";
             } else {
-                statusBox.className = "status-box status-error";
-                statusBox.textContent = result.error || "Request failed";
-
+                setStatus("status-error", result.error || "Request failed");
                 predictionValue.textContent = "--";
                 predictionMeta.textContent = "Check the request and try again";
-                clearComparison();
+                infoBox.textContent = result.error || "Request failed.";
+            }
+        }
+
+        function updateFileUI(result) {
+            resultBox.textContent = JSON.stringify(result, null, 2);
+
+            const payload = {
+                model: getText("model"),
+                tag: getText("tag"),
+                engine_id: getNumber("engine_id")
+            };
+            updateTopStats(payload);
+
+            if (result.ok) {
+                setStatus("status-ready", `File prediction ready for Engine ${result.engine_id} (${result.tag})`);
+                predictionValue.textContent = result.predicted_rul.toFixed(2);
+                predictionMeta.textContent =
+                    `File mode | Model: ${result.model} | Last cycle used: ${result.last_cycle_used}`;
+                updateProgress(result.final_window_rows || WINDOW_SIZE);
+
+                infoBox.textContent =
+                    `File prediction summary
+Rows requested: ${result.rows_requested}
+Rows available after filter: ${result.rows_available_after_filter}
+Rows selected before windowing: ${result.rows_selected_before_windowing}
+Final window rows: ${result.final_window_rows}
+Padded to full window: ${result.padded}
+Last cycle used: ${result.last_cycle_used}`;
+
+                appendHistory(result.last_cycle_used, `file (${result.model})`, result.predicted_rul);
+            } else {
+                setStatus("status-error", result.error || "File prediction failed");
+                predictionValue.textContent = "--";
+                predictionMeta.textContent = "File upload prediction failed";
+                infoBox.textContent = result.error || "File prediction failed.";
             }
         }
 
@@ -879,14 +998,14 @@
                 });
 
                 const result = await response.json();
-                updateUI(result, payload);
+                updateStreamUI(result, payload);
 
                 if (result.ok) {
                     const cycleInput = document.getElementById("time_cycles");
                     cycleInput.value = Number(cycleInput.value) + 1;
                 }
             } catch (error) {
-                updateUI({ ok: false, error: error.message }, payload);
+                updateStreamUI({ ok: false, error: error.message }, payload);
             }
         }
 
@@ -908,8 +1027,7 @@
                 updateProgress(cyclesCollected);
 
                 if (result.ok && result.window_ready) {
-                    statusBox.className = "status-box status-ready";
-                    statusBox.textContent = `All model predictions ready for Engine ${result.engine_id} (${result.tag})`;
+                    setStatus("status-ready", `All model predictions ready for Engine ${result.engine_id} (${result.tag})`);
 
                     lrCompareValue.textContent = result.predictions.lr.toFixed(2);
                     rfCompareValue.textContent = result.predictions.rf.toFixed(2);
@@ -917,6 +1035,13 @@
 
                     predictionValue.textContent = result.predictions[payload.model].toFixed(2);
                     predictionMeta.textContent = `Selected model: ${payload.model} | Cycles Collected: ${result.cycles_collected}`;
+
+                    infoBox.textContent =
+                        `Compare-all prediction summary
+Cycle: ${payload.time_cycles}
+Linear Regression: ${result.predictions.lr.toFixed(2)}
+Random Forest: ${result.predictions.rf.toFixed(2)}
+LSTM: ${result.predictions.lstm.toFixed(2)}`;
 
                     compareHistory.push({
                         cycle: payload.time_cycles,
@@ -926,26 +1051,21 @@
                     });
                     drawPredictionChart();
 
-                    historyRows.push({
-                        cycle: payload.time_cycles,
-                        mode: "all",
-                        predicted_rul: result.predictions[payload.model]
-                    });
-                    renderHistory();
+                    appendHistory(payload.time_cycles, "all", result.predictions[payload.model]);
                 } else if (result.ok && result.window_ready === false) {
-                    statusBox.className = "status-box status-waiting";
-                    statusBox.textContent = result.message || "Waiting for enough cycles.";
-
+                    setStatus("status-waiting", result.message || "Waiting for enough cycles.");
                     predictionValue.textContent = "--";
                     predictionMeta.textContent = "Comparison will appear once 30 cycles are collected.";
-                    clearComparison();
+                    infoBox.textContent = `Compare-all is waiting for enough cycles.
+Cycles collected: ${result.cycles_collected || 0}
+Message: ${result.message || "Need more cycles before prediction."}`;
+                    clearComparisonCards();
                 } else {
-                    statusBox.className = "status-box status-error";
-                    statusBox.textContent = result.error || "Request failed";
-
+                    setStatus("status-error", result.error || "Request failed");
                     predictionValue.textContent = "--";
                     predictionMeta.textContent = "Check the request and try again";
-                    clearComparison();
+                    infoBox.textContent = result.error || "Compare-all request failed.";
+                    clearComparisonCards();
                 }
 
                 if (result.ok) {
@@ -953,8 +1073,37 @@
                     cycleInput.value = Number(cycleInput.value) + 1;
                 }
             } catch (error) {
-                updateUI({ ok: false, error: error.message }, payload);
-                clearComparison();
+                updateStreamUI({ ok: false, error: error.message }, payload);
+                clearComparisonCards();
+            }
+        }
+
+        async function predictFromFile() {
+            const fileInput = document.getElementById("upload_file");
+            const file = fileInput.files[0];
+
+            if (!file) {
+                updateFileUI({ ok: false, error: "Please choose a CSV file first." });
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("model", getText("model"));
+            formData.append("tag", getText("tag"));
+            formData.append("engine_id", getNumber("engine_id"));
+            formData.append("rows_to_use", getNumber("rows_to_use"));
+
+            try {
+                const response = await fetch("/predict/file", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const result = await response.json();
+                updateFileUI(result);
+            } catch (error) {
+                updateFileUI({ ok: false, error: error.message });
             }
         }
 
@@ -972,7 +1121,7 @@
                 });
 
                 const result = await response.json();
-                updateUI(result, {
+                updateStreamUI(result, {
                     model: getText("model"),
                     tag: payload.tag,
                     engine_id: payload.engine_id,
@@ -980,16 +1129,21 @@
                 });
 
                 document.getElementById("time_cycles").value = 1;
+                document.getElementById("upload_file").value = "";
+                document.getElementById("rows_to_use").value = 30;
+
                 updateProgress(0);
                 predictionValue.textContent = "--";
-                predictionMeta.textContent = "Prediction will appear once 30 cycles are collected.";
+                predictionMeta.textContent = "Prediction will appear here after streaming, compare-all, or file upload prediction.";
+                infoBox.textContent = "All local UI summaries cleared for the selected engine.";
+
                 historyRows.length = 0;
                 compareHistory.length = 0;
-                clearComparison();
+                clearComparisonCards();
                 renderHistory();
                 drawPredictionChart();
             } catch (error) {
-                updateUI({ ok: false, error: error.message });
+                updateStreamUI({ ok: false, error: error.message });
             }
         }
 
@@ -1002,7 +1156,7 @@
                 });
 
                 const result = await response.json();
-                updateUI(result, {
+                updateStreamUI(result, {
                     model: getText("model"),
                     tag: getText("tag"),
                     engine_id: getNumber("engine_id"),
@@ -1010,25 +1164,31 @@
                 });
 
                 document.getElementById("time_cycles").value = 1;
+                document.getElementById("upload_file").value = "";
+                document.getElementById("rows_to_use").value = 30;
+
                 updateProgress(0);
                 predictionValue.textContent = "--";
-                predictionMeta.textContent = "Prediction will appear once 30 cycles are collected.";
+                predictionMeta.textContent = "Prediction will appear here after streaming, compare-all, or file upload prediction.";
+                infoBox.textContent = "All local UI summaries cleared.";
+
                 historyRows.length = 0;
                 compareHistory.length = 0;
-                clearComparison();
+                clearComparisonCards();
                 renderHistory();
                 drawPredictionChart();
             } catch (error) {
-                updateUI({ ok: false, error: error.message });
+                updateStreamUI({ ok: false, error: error.message });
             }
         }
 
         sendBtn.addEventListener("click", sendSensorRow);
         compareAllBtn.addEventListener("click", compareAllModels);
+        predictFileBtn.addEventListener("click", predictFromFile);
         resetEngineBtn.addEventListener("click", resetCurrentEngine);
         resetAllBtn.addEventListener("click", resetAllEngines);
 
-        clearComparison();
+        clearComparisonCards();
         renderHistory();
         updateProgress(0);
         drawPredictionChart();
